@@ -1,18 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login, loading } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/listings');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,25 +29,11 @@ const Login = () => {
     }
 
     try {
-      // Using Supabase directly to login
-      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (supabaseError) {
-        console.error("Login error:", supabaseError);
-        setError(supabaseError.message || 'Failed to log in. Please check your credentials.');
-        return;
-      }
-      
-      if (data?.user) {
-        toast.success('Login successful!');
-        navigate('/listings');
-      }
-    } catch (err) {
+      await login(email, password);
+      // The redirect will be handled by the useEffect above
+    } catch (err: any) {
       console.error("Login error:", err);
-      setError('An unexpected error occurred. Please try again.');
+      setError(err.message || 'An unexpected error occurred. Please try again.');
     }
   };
 

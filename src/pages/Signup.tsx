@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShoppingCart } from 'lucide-react';
@@ -11,8 +11,15 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const { signup, loading } = useAuth();
+  const { signup, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/listings');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,9 +42,9 @@ const Signup = () => {
 
     try {
       await signup(email, password, name);
-      navigate('/listings');
-    } catch (err) {
-      setError('Failed to create an account.');
+      // Auth state change will redirect user after email verification
+    } catch (err: any) {
+      setError(err.message || 'Failed to create an account.');
       console.error(err);
     }
   };
