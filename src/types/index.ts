@@ -48,6 +48,7 @@ export type Bid = {
   message?: string;
   status: "pending" | "accepted" | "rejected";
   createdAt: string;
+  listing?: Listing; // Added the optional listing property
 };
 
 export type Message = {
