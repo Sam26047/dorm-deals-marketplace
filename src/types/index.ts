@@ -1,4 +1,5 @@
 
+
 export type User = {
   id: string;
   email: string;
@@ -14,6 +15,9 @@ export type Category =
   | "clothing" 
   | "kitchen" 
   | "school_supplies" 
+  | "engineering_tools"
+  | "lab_equipment"
+  | "dorm_essentials"
   | "other";
 
 export type Condition = 

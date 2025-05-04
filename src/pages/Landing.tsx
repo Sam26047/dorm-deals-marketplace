@@ -1,12 +1,15 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, BookOpen, Laptop, Sofa, Tag } from 'lucide-react';
+import { ShoppingCart, BookOpen, Laptop, Sofa, Tag, Beaker, Tool, Shirt, Home } from 'lucide-react';
 import Footer from '@/components/Footer';
+import Navbar from '@/components/Navbar';
 
 const Landing = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <Navbar />
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-teal-600 text-white py-20 px-6">
         <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center">
@@ -121,6 +124,54 @@ const Landing = () => {
                 </div>
                 <div className="p-4 text-center">
                   <h3 className="font-medium text-lg group-hover:text-primary transition-colors">Furniture</h3>
+                </div>
+              </div>
+            </Link>
+
+            {/* Lab Equipment */}
+            <Link to="/listings?category=lab_equipment" className="group">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover">
+                <div className="h-32 bg-green-500 flex items-center justify-center">
+                  <Beaker className="h-12 w-12 text-white" />
+                </div>
+                <div className="p-4 text-center">
+                  <h3 className="font-medium text-lg group-hover:text-primary transition-colors">Lab Equipment</h3>
+                </div>
+              </div>
+            </Link>
+
+            {/* Engineering Tools */}
+            <Link to="/listings?category=engineering_tools" className="group">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover">
+                <div className="h-32 bg-red-500 flex items-center justify-center">
+                  <Tool className="h-12 w-12 text-white" />
+                </div>
+                <div className="p-4 text-center">
+                  <h3 className="font-medium text-lg group-hover:text-primary transition-colors">Engineering Tools</h3>
+                </div>
+              </div>
+            </Link>
+
+            {/* Clothing */}
+            <Link to="/listings?category=clothing" className="group">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover">
+                <div className="h-32 bg-pink-500 flex items-center justify-center">
+                  <Shirt className="h-12 w-12 text-white" />
+                </div>
+                <div className="p-4 text-center">
+                  <h3 className="font-medium text-lg group-hover:text-primary transition-colors">Clothing</h3>
+                </div>
+              </div>
+            </Link>
+
+            {/* Dorm Essentials */}
+            <Link to="/listings?category=dorm_essentials" className="group">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover">
+                <div className="h-32 bg-indigo-500 flex items-center justify-center">
+                  <Home className="h-12 w-12 text-white" />
+                </div>
+                <div className="p-4 text-center">
+                  <h3 className="font-medium text-lg group-hover:text-primary transition-colors">Dorm Essentials</h3>
                 </div>
               </div>
             </Link>
