@@ -9,192 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      bids: {
-        Row: {
-          amount: number
-          bidder_id: string
-          created_at: string
-          id: string
-          product_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          bidder_id: string
-          created_at?: string
-          id?: string
-          product_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          bidder_id?: string
-          created_at?: string
-          id?: string
-          product_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bids_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      favorites: {
-        Row: {
-          created_at: string
-          id: string
-          product_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          product_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          product_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "favorites_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          product_id: string | null
-          read: boolean
-          receiver_id: string
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          product_id?: string | null
-          read?: boolean
-          receiver_id: string
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          product_id?: string | null
-          read?: boolean
-          receiver_id?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      products: {
-        Row: {
-          category: string
-          condition: Database["public"]["Enums"]["product_condition"]
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          image_urls: string[] | null
-          location: string | null
-          price: number
-          seller_id: string
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          category: string
-          condition: Database["public"]["Enums"]["product_condition"]
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          image_urls?: string[] | null
-          location?: string | null
-          price: number
-          seller_id: string
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          category?: string
-          condition?: Database["public"]["Enums"]["product_condition"]
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          image_urls?: string[] | null
-          location?: string | null
-          price?: number
-          seller_id?: string
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          department: string | null
-          id: string
-          updated_at: string
-          username: string | null
-          year: number | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          department?: string | null
-          id: string
-          updated_at?: string
-          username?: string | null
-          year?: number | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          department?: string | null
-          id?: string
-          updated_at?: string
-          username?: string | null
-          year?: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
@@ -203,7 +18,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      product_condition: "new" | "like-new" | "good" | "fair" | "poor"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -318,8 +133,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      product_condition: ["new", "like-new", "good", "fair", "poor"],
-    },
+    Enums: {},
   },
 } as const
