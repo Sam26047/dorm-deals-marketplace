@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, BookOpen, Laptop, Sofa, Tag, Beaker, Tool, Shirt, Home } from 'lucide-react';
+import { ShoppingCart, BookOpen, Laptop, Sofa, Tag, Beaker, Wrench, Shirt, Home } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Navbar from '@/components/Navbar';
 
@@ -144,7 +144,7 @@ const Landing = () => {
             <Link to="/listings?category=engineering_tools" className="group">
               <div className="bg-white rounded-lg shadow-md overflow-hidden card-hover">
                 <div className="h-32 bg-red-500 flex items-center justify-center">
-                  <Tool className="h-12 w-12 text-white" />
+                  <Wrench className="h-12 w-12 text-white" />
                 </div>
                 <div className="p-4 text-center">
                   <h3 className="font-medium text-lg group-hover:text-primary transition-colors">Engineering Tools</h3>
