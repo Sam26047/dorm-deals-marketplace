@@ -4,8 +4,13 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface UserWithMetadata extends User {
+  name?: string;
+  avatar?: string;
+}
+
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: UserWithMetadata | null;
   session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -17,7 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserWithMetadata | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -25,7 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      setCurrentUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Add name from user metadata if available
+        const userWithMetadata: UserWithMetadata = {
+          ...session.user,
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+          avatar: session.user.user_metadata?.avatar || undefined
+        };
+        setCurrentUser(userWithMetadata);
+      } else {
+        setCurrentUser(null);
+      }
       
       if (event === 'SIGNED_IN') {
         toast.success('Signed in successfully!');
@@ -37,7 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setCurrentUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Add name from user metadata if available
+        const userWithMetadata: UserWithMetadata = {
+          ...session.user,
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0],
+          avatar: session.user.user_metadata?.avatar || undefined
+        };
+        setCurrentUser(userWithMetadata);
+      } else {
+        setCurrentUser(null);
+      }
+      
       setLoading(false);
     });
 

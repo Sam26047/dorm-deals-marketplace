@@ -1,11 +1,10 @@
 
-
 export type User = {
   id: string;
   email: string;
-  name: string;
+  name?: string;
   avatar?: string;
-  createdAt: string;
+  createdAt?: string;
 };
 
 export type Category = 
