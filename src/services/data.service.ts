@@ -1,4 +1,3 @@
-
 import { Listing, Bid, Message, Conversation, Category, Condition, User } from '@/types';
 
 // Sample data
@@ -10,7 +9,7 @@ const sampleListings: Listing[] = [
     price: 40,
     category: 'textbooks',
     condition: 'good',
-    imageUrl: 'https://images.unsplash.com/photo-1581087607783-3د091715642d?q=80&w=2000&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1581087607783-3d091715642d?q=80&w=2000&auto=format&fit=crop',
     sellerId: 'user1',
     sellerName: 'Alex Johnson',
     createdAt: '2023-05-15T14:48:00.000Z',
@@ -132,7 +131,7 @@ const sampleConversations: Conversation[] = [
     participantIds: ['user1', 'user3'],
     participantNames: ['Alex Johnson', 'Taylor Wilson'],
     lastMessage: 'Can I see more photos of the lamp?',
-    lastMessageDate: '2023-05-20T17:20:00.000Z',
+    lastMessageDate: '2023-05-20T16:30:00.000Z',
     unreadCount: 0
   }
 ];
@@ -484,17 +483,21 @@ export const messageService = {
   }
 };
 
-// Helper functions
-export const categories: { value: Category, label: string }[] = [
+// Updated categories to match the Category type in types/index.ts
+export const categories = [
   { value: "textbooks", label: "Textbooks" },
   { value: "electronics", label: "Electronics" },
   { value: "furniture", label: "Furniture" },
   { value: "clothing", label: "Clothing" },
   { value: "kitchen", label: "Kitchen" },
   { value: "school_supplies", label: "School Supplies" },
+  { value: "engineering_tools", label: "Engineering Tools" },
+  { value: "lab_equipment", label: "Lab Equipment" },
+  { value: "dorm_essentials", label: "Dorm Essentials" },
   { value: "other", label: "Other" }
 ];
 
+// Conditions
 export const conditions: { value: Condition, label: string }[] = [
   { value: "new", label: "New" },
   { value: "like_new", label: "Like New" },
