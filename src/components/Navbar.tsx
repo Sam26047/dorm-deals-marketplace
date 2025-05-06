@@ -2,7 +2,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Menu, X, User, Search, ShoppingCart, Tag, MessageCircle, Plus } from 'lucide-react';
+import { Menu, X, User, Search, ShoppingCart, Tag, MessageCircle, Plus, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
   const { isAuthenticated, currentUser, logout } = useAuth();
@@ -52,20 +58,20 @@ const Navbar = () => {
                 <MessageCircle className="mr-1 h-4 w-4" />
                 Messages
               </Link>
-              <div className="relative group">
-                <button className="flex items-center text-gray-700 hover:text-primary font-medium">
+              
+              {/* Replace hover dropdown with DropdownMenu component */}
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center text-gray-700 hover:text-primary font-medium">
                   <User className="mr-1 h-4 w-4" />
                   {currentUser?.name}
-                </button>
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -119,8 +125,9 @@ const Navbar = () => {
                   <span className="font-medium">{currentUser?.name}</span>
                   <button
                     onClick={handleLogout}
-                    className="text-red-500 hover:text-red-700 font-medium"
+                    className="text-red-500 hover:text-red-700 font-medium flex items-center"
                   >
+                    <LogOut className="mr-1 h-4 w-4" />
                     Logout
                   </button>
                 </div>
