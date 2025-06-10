@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="flex flex-wrap justify-between">
           {/* Site Information */}
           <div className="w-full md:w-1/3 mb-8 md:mb-0">
-            <h3 className="text-xl font-bold mb-4">Campus Deals</h3>
+            <h3 className="text-xl font-bold mb-4">Campus Marketplace</h3>
             <p className="text-gray-300 mb-4">
               The best marketplace for college students to buy and sell items within their campus community.
             </p>
@@ -59,7 +59,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400 text-sm">
-          <p>&copy; {new Date().getFullYear()} Campus Deals. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Campus Marketplace. All rights reserved.</p>
         </div>
       </div>
     </footer>

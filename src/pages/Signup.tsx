@@ -55,7 +55,7 @@ const Signup = () => {
         <div className="flex justify-center">
           <Link to="/" className="flex items-center">
             <ShoppingCart className="h-10 w-10 text-primary" />
-            <span className="ml-2 text-2xl font-bold text-gray-900">Campus Deals</span>
+            <span className="ml-2 text-2xl font-bold text-gray-900">Campus Marketplace</span>
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

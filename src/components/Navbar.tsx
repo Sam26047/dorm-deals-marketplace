@@ -30,7 +30,7 @@ const Navbar = () => {
         {/* Logo */}
         <Link to="/" className="text-xl md:text-2xl font-bold text-primary flex items-center">
           <ShoppingCart className="mr-2" />
-          Campus Deals
+          Campus Marketplace
         </Link>
         
         {/* Desktop Navigation */}
