@@ -1,3 +1,4 @@
+
 import { Listing, Bid, Message, Conversation, Category, Condition, User } from '@/types';
 
 // Sample data
@@ -507,9 +508,9 @@ export const conditions: { value: Condition, label: string }[] = [
 ];
 
 export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
   }).format(price);
 };
 
