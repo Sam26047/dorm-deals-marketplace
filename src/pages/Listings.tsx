@@ -23,7 +23,7 @@ const Listings = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Parse URL query params
+  // Parse URL query params and apply filters
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const categoryParam = params.get('category');
@@ -31,35 +31,32 @@ const Listings = () => {
     const minPriceParam = params.get('minPrice');
     const maxPriceParam = params.get('maxPrice');
     
-    if (categoryParam) {
-      setSelectedCategory(categoryParam as Category);
-    }
+    // Update state from URL params
+    setSelectedCategory(categoryParam as Category || '');
+    setSearchQuery(searchParam || '');
+    setMinPrice(minPriceParam && !isNaN(Number(minPriceParam)) ? Number(minPriceParam) : '');
+    setMaxPrice(maxPriceParam && !isNaN(Number(maxPriceParam)) ? Number(maxPriceParam) : '');
     
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-    
-    if (minPriceParam && !isNaN(Number(minPriceParam))) {
-      setMinPrice(Number(minPriceParam));
-    }
-    
-    if (maxPriceParam && !isNaN(Number(maxPriceParam))) {
-      setMaxPrice(Number(maxPriceParam));
-    }
+    // Apply filters with the URL parameters
+    filterListingsWithParams(
+      searchParam || '',
+      categoryParam as Category || '',
+      minPriceParam && !isNaN(Number(minPriceParam)) ? Number(minPriceParam) : undefined,
+      maxPriceParam && !isNaN(Number(maxPriceParam)) ? Number(maxPriceParam) : undefined
+    );
   }, [location.search]);
 
-  // Fetch listings
+  // Fetch listings on component mount
   useEffect(() => {
     const fetchListings = async () => {
       try {
         setLoading(true);
         const data = await listingService.getAll();
         setListings(data);
-        setFilteredListings(data);
+        // Don't set filteredListings here - let the URL params effect handle it
       } catch (err) {
         console.error('Error fetching listings:', err);
         setError('Failed to load listings. Please try again later.');
-      } finally {
         setLoading(false);
       }
     };
@@ -67,7 +64,30 @@ const Listings = () => {
     fetchListings();
   }, []);
 
-  // Apply filters
+  // Filter listings with specific parameters
+  const filterListingsWithParams = async (
+    search: string,
+    category: Category | '',
+    minPriceValue?: number,
+    maxPriceValue?: number
+  ) => {
+    try {
+      setLoading(true);
+      const filtered = await listingService.search(
+        search,
+        category || undefined,
+        minPriceValue,
+        maxPriceValue
+      );
+      setFilteredListings(filtered);
+    } catch (err) {
+      console.error('Error filtering listings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Apply filters based on current state
   const applyFilters = () => {
     const filters = new URLSearchParams();
     
@@ -91,32 +111,7 @@ const Listings = () => {
       pathname: '/listings',
       search: filters.toString()
     });
-    
-    filterListings();
   };
-
-  // Filter listings based on current filters
-  const filterListings = async () => {
-    try {
-      setLoading(true);
-      const filtered = await listingService.search(
-        searchQuery,
-        selectedCategory || undefined,
-        minPrice === '' ? undefined : minPrice,
-        maxPrice === '' ? undefined : maxPrice
-      );
-      setFilteredListings(filtered);
-    } catch (err) {
-      console.error('Error filtering listings:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Apply filters when filter parameters change
-  useEffect(() => {
-    filterListings();
-  }, [searchQuery, selectedCategory, minPrice, maxPrice]);
 
   // Clear all filters
   const clearFilters = () => {
