@@ -28,7 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
       setSession(session);
       
       if (session?.user) {
@@ -43,6 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentUser(null);
       }
       
+      setLoading(false);
+      
       if (event === 'SIGNED_IN') {
         toast.success('Signed in successfully!');
       } else if (event === 'SIGNED_OUT') {
@@ -52,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session);
       setSession(session);
       
       if (session?.user) {
@@ -77,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -85,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         throw error;
       }
+      
+      console.log('Login successful:', data);
     } catch (error: any) {
+      console.error('Login error:', error);
       toast.error(error.message || 'Failed to login. Please check your credentials.');
       throw error;
     } finally {
@@ -112,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast.success('Account created successfully! Please check your email for verification.');
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast.error(error.message || 'Failed to create account. Please try again.');
       throw error;
     } finally {
@@ -122,13 +130,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setLoading(true);
+      console.log('Attempting logout...');
+      
+      // Clear local state first
+      setCurrentUser(null);
+      setSession(null);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        throw error;
+        console.error('Logout error:', error);
+        // Even if there's an error, we've cleared local state
+        toast.info('Signed out locally.');
+      } else {
+        console.log('Logout successful');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to logout.');
+      console.error('Logout error:', error);
+      toast.error('Failed to logout completely, but you have been signed out locally.');
     } finally {
       setLoading(false);
     }
@@ -141,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     signup,
     logout,
-    isAuthenticated: !!currentUser
+    isAuthenticated: !!currentUser && !!session
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
