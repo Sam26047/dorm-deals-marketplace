@@ -36,12 +36,9 @@ const ListingDetail = () => {
         const listingData = await listingService.getById(id);
         if (listingData) {
           setListing(listingData);
-          
-          // If current user is the owner, fetch bids for this listing
-          if (currentUser && listingData.sellerId === currentUser.id) {
-            const bidsData = await bidService.getByListingId(id);
-            setBids(bidsData);
-          }
+          // Bids are visible to everyone
+          const bidsData = await bidService.getByListingId(id);
+          setBids(bidsData);
         } else {
           setError('Listing not found');
         }
