@@ -177,12 +177,25 @@ export const listingService = {
   },
 
   async update(id: string, updates: Partial<Listing>): Promise<Listing | undefined> {
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      title?: string;
+      description?: string;
+      price?: number;
+      category?: string;
+      condition?: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
+      image_url?: string;
+    } = {};
     if (updates.title !== undefined) patch.title = updates.title;
     if (updates.description !== undefined) patch.description = updates.description;
     if (updates.price !== undefined) patch.price = updates.price;
     if (updates.category !== undefined) patch.category = updates.category;
-    if (updates.condition !== undefined) patch.condition = toDbCondition(updates.condition);
+    if (updates.condition !== undefined)
+      patch.condition = toDbCondition(updates.condition) as
+        | 'new'
+        | 'like-new'
+        | 'good'
+        | 'fair'
+        | 'poor';
     if (updates.imageUrl !== undefined) patch.image_url = updates.imageUrl;
 
     const { data, error } = await supabase
