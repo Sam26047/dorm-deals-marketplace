@@ -36,12 +36,9 @@ const ListingDetail = () => {
         const listingData = await listingService.getById(id);
         if (listingData) {
           setListing(listingData);
-          
-          // If current user is the owner, fetch bids for this listing
-          if (currentUser && listingData.sellerId === currentUser.id) {
-            const bidsData = await bidService.getByListingId(id);
-            setBids(bidsData);
-          }
+          // Bids are visible to everyone
+          const bidsData = await bidService.getByListingId(id);
+          setBids(bidsData);
         } else {
           setError('Listing not found');
         }
@@ -322,64 +319,71 @@ const ListingDetail = () => {
           </div>
         </div>
         
-        {/* Bids Section (for owners only) */}
-        {isOwner && bids.length > 0 && (
+        {/* Bids Section (visible to everyone) */}
+        {bids.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-bold mb-4">Bids ({bids.length})</h2>
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <ul className="divide-y divide-gray-200">
-                {bids.map((bid) => (
-                  <li key={bid.id} className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                          <User className="h-5 w-5 text-gray-500" />
+                {bids.map((bid) => {
+                  const isMyBid = currentUser && bid.buyerId === currentUser.id;
+                  return (
+                    <li key={bid.id} className={`p-4 ${isMyBid ? 'bg-primary/5' : ''}`}>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                            <User className="h-5 w-5 text-gray-500" />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {bid.buyerName} {isMyBid && <span className="text-xs text-primary ml-1">(You)</span>}
+                            </p>
+                            <p className="text-gray-500 text-sm">
+                              Offered {formatPrice(bid.amount)} • {formatDate(bid.createdAt)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{bid.buyerName}</p>
-                          <p className="text-gray-500 text-sm">
-                            Offered {formatPrice(bid.amount)} • {formatDate(bid.createdAt)}
+
+                        {isOwner && bid.status === 'pending' ? (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleAcceptBid(bid.id)}
+                              className="px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm hover:bg-green-200 transition-colors"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleRejectBid(bid.id)}
+                              className="px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200 transition-colors"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            className={`px-3 py-1 rounded-md text-sm capitalize ${
+                              bid.status === 'accepted'
+                                ? 'bg-green-100 text-green-800'
+                                : bid.status === 'rejected'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {bid.status}
+                          </span>
+                        )}
+                      </div>
+
+                      {bid.message && (
+                        <div className="mt-2 ml-13 pl-12">
+                          <p className="text-gray-700 text-sm border-l-2 border-gray-200 pl-3">
+                            "{bid.message}"
                           </p>
                         </div>
-                      </div>
-                      
-                      {bid.status === 'pending' ? (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleAcceptBid(bid.id)}
-                            className="px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm hover:bg-green-200 transition-colors"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleRejectBid(bid.id)}
-                            className="px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200 transition-colors"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          className={`px-3 py-1 rounded-md text-sm ${
-                            bid.status === 'accepted'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {bid.status === 'accepted' ? 'Accepted' : 'Declined'}
-                        </span>
                       )}
-                    </div>
-                    
-                    {bid.message && (
-                      <div className="mt-2 ml-13 pl-12">
-                        <p className="text-gray-700 text-sm border-l-2 border-gray-200 pl-3">
-                          "{bid.message}"
-                        </p>
-                      </div>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
