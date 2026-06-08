@@ -90,6 +90,10 @@ const ListingDetail = () => {
       setShowBidForm(false);
       setBidAmount('');
       setBidMessage('');
+
+      // Refresh bid list (visible to the seller / owner view)
+      const refreshed = await bidService.getByListingId(listing.id);
+      setBids(refreshed);
     } catch (err) {
       console.error('Error submitting bid:', err);
       toast.error('Failed to submit bid. Please try again.');

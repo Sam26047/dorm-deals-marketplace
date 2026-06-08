@@ -101,13 +101,23 @@ const CreateListing = () => {
     
     try {
       setIsSubmitting(true);
-      
-      // In a real app, we would upload the image to a storage service
-      // and get back a URL. For this demo, we'll either use the provided URL
-      // or a placeholder for the uploaded image
-      const finalImageUrl = imageUrl || 
-        (imageFile ? URL.createObjectURL(imageFile) : '/placeholder.svg');
-      
+
+      // Persist the image so it survives refresh. If a URL was provided, use it.
+      // Otherwise read the uploaded file as a base64 data URL.
+      const fileToDataUrl = (file: File) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+      const finalImageUrl = imageUrl
+        ? imageUrl
+        : imageFile
+        ? await fileToDataUrl(imageFile)
+        : '/placeholder.svg';
+
       const newListing = await listingService.create({
         title,
         description,
