@@ -1,524 +1,494 @@
+import { Listing, Bid, Message, Conversation, Category, Condition } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
-import { Listing, Bid, Message, Conversation, Category, Condition, User } from '@/types';
+// ---------- Condition enum mapping (app uses underscore, DB uses hyphen) ----------
+const toDbCondition = (c: Condition): string => (c === 'like_new' ? 'like-new' : c);
+const fromDbCondition = (c: string): Condition =>
+  (c === 'like-new' ? 'like_new' : c) as Condition;
 
-// Sample data
-const sampleListings: Listing[] = [
-  {
-    id: '1',
-    title: 'Computer Science Textbook',
-    description: 'Introduction to Algorithms by Cormen, slightly used. Great condition with no markings or highlights.',
-    price: 40,
-    category: 'textbooks',
-    condition: 'good',
-    imageUrl: 'https://images.unsplash.com/photo-1581087607783-3d091715642d?q=80&w=2000&auto=format&fit=crop',
-    sellerId: 'user1',
-    sellerName: 'Alex Johnson',
-    createdAt: '2023-05-15T14:48:00.000Z',
-    updatedAt: '2023-05-15T14:48:00.000Z',
-  },
-  {
-    id: '2',
-    title: 'Mini Refrigerator',
-    description: 'Perfect for dorm rooms. 2.7 cubic feet with freezer compartment. Works great!',
-    price: 75,
-    category: 'electronics',
-    condition: 'good',
-    imageUrl: 'https://images.unsplash.com/photo-1571175443880-49e1d25b2bc5?q=80&w=2000&auto=format&fit=crop',
-    sellerId: 'user2',
-    sellerName: 'Jamie Smith',
-    createdAt: '2023-05-18T09:30:00.000Z',
-    updatedAt: '2023-05-18T09:30:00.000Z',
-  },
-  {
-    id: '3',
-    title: 'Desk Lamp',
-    description: 'Adjustable LED desk lamp with multiple brightness settings and USB charging port.',
-    price: 25,
-    category: 'electronics',
-    condition: 'like_new',
-    imageUrl: 'https://images.unsplash.com/photo-1534381025218-07e4a1d7bf85?q=80&w=2000&auto=format&fit=crop',
-    sellerId: 'user1',
-    sellerName: 'Alex Johnson',
-    createdAt: '2023-05-20T16:15:00.000Z',
-    updatedAt: '2023-05-20T16:15:00.000Z',
-  },
-  {
-    id: '4',
-    title: 'Comfortable Futon',
-    description: 'Converts from sofa to bed. Black microfiber cover. 1 year old but in excellent condition.',
-    price: 120,
-    category: 'furniture',
-    condition: 'good',
-    imageUrl: 'https://images.unsplash.com/photo-1540574163026-643ea20ade25?q=80&w=2000&auto=format&fit=crop',
-    sellerId: 'user3',
-    sellerName: 'Taylor Wilson',
-    createdAt: '2023-05-22T11:20:00.000Z',
-    updatedAt: '2023-05-22T11:20:00.000Z',
-  },
-  {
-    id: '5',
-    title: 'Calculus Textbook',
-    description: 'Calculus: Early Transcendentals, 8th Edition. No highlights or notes.',
-    price: 50,
-    category: 'textbooks',
-    condition: 'like_new',
-    imageUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=2000&auto=format&fit=crop',
-    sellerId: 'user4',
-    sellerName: 'Jordan Lee',
-    createdAt: '2023-05-25T08:45:00.000Z',
-    updatedAt: '2023-05-25T08:45:00.000Z',
-  },
-  {
-    id: '6',
-    title: 'Wireless Headphones',
-    description: 'Noise-cancelling wireless headphones. 30-hour battery life. Minor wear on ear pads.',
-    price: 65,
-    category: 'electronics',
-    condition: 'good',
-    imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2000&auto=format&fit=crop',
-    sellerId: 'user2',
-    sellerName: 'Jamie Smith',
-    createdAt: '2023-05-28T13:10:00.000Z',
-    updatedAt: '2023-05-28T13:10:00.000Z',
-  }
-];
-
-// Sample bids
-const sampleBids: Bid[] = [
-  {
-    id: 'bid1',
-    listingId: '1',
-    buyerId: 'user2',
-    buyerName: 'Jamie Smith',
-    amount: 35,
-    message: 'Would you take $35?',
-    status: 'pending',
-    createdAt: '2023-05-16T10:30:00.000Z',
-  },
-  {
-    id: 'bid2',
-    listingId: '1',
-    buyerId: 'user3',
-    buyerName: 'Taylor Wilson',
-    amount: 38,
-    message: 'I can pick up today!',
-    status: 'pending',
-    createdAt: '2023-05-16T14:45:00.000Z',
-  },
-  {
-    id: 'bid3',
-    listingId: '4',
-    buyerId: 'user1',
-    buyerName: 'Alex Johnson',
-    amount: 110,
-    message: 'Would you consider $110?',
-    status: 'pending',
-    createdAt: '2023-05-23T09:20:00.000Z',
-  }
-];
-
-// Sample conversations
-const sampleConversations: Conversation[] = [
-  {
-    id: 'conv1',
-    participantIds: ['user1', 'user2'],
-    participantNames: ['Alex Johnson', 'Jamie Smith'],
-    lastMessage: 'Is the textbook still available?',
-    lastMessageDate: '2023-05-16T10:35:00.000Z',
-    unreadCount: 1
-  },
-  {
-    id: 'conv2',
-    participantIds: ['user1', 'user3'],
-    participantNames: ['Alex Johnson', 'Taylor Wilson'],
-    lastMessage: 'Can I see more photos of the lamp?',
-    lastMessageDate: '2023-05-20T16:30:00.000Z',
-    unreadCount: 0
-  }
-];
-
-// Sample messages
-const sampleMessages: Record<string, Message[]> = {
-  'conv1': [
-    {
-      id: 'msg1',
-      senderId: 'user2',
-      receiverId: 'user1',
-      content: 'Hi, is the textbook still available?',
-      createdAt: '2023-05-16T10:30:00.000Z',
-      read: true
-    },
-    {
-      id: 'msg2',
-      senderId: 'user1',
-      receiverId: 'user2',
-      content: 'Yes, it is! Are you interested?',
-      createdAt: '2023-05-16T10:32:00.000Z',
-      read: true
-    },
-    {
-      id: 'msg3',
-      senderId: 'user2',
-      receiverId: 'user1',
-      content: 'Is the textbook still available?',
-      createdAt: '2023-05-16T10:35:00.000Z',
-      read: false
-    }
-  ],
-  'conv2': [
-    {
-      id: 'msg4',
-      senderId: 'user3',
-      receiverId: 'user1',
-      content: 'Hello! I\'m interested in your desk lamp.',
-      createdAt: '2023-05-20T16:30:00.000Z',
-      read: true
-    },
-    {
-      id: 'msg5',
-      senderId: 'user1',
-      receiverId: 'user3',
-      content: 'Great! It\'s still available.',
-      createdAt: '2023-05-20T16:45:00.000Z',
-      read: true
-    },
-    {
-      id: 'msg6',
-      senderId: 'user3',
-      receiverId: 'user1',
-      content: 'Can I see more photos of the lamp?',
-      createdAt: '2023-05-20T17:20:00.000Z',
-      read: true
-    }
-  ]
+// ---------- Row -> domain mappers ----------
+type ProductRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  category: string;
+  condition: string;
+  image_url: string | null;
+  image_urls: string[] | null;
+  seller_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
 };
 
-// LocalStorage keys
-const LISTINGS_KEY = 'campus_marketplace_listings';
-const BIDS_KEY = 'campus_marketplace_bids';
-const CONVERSATIONS_KEY = 'campus_marketplace_conversations';
-const MESSAGES_KEY = 'campus_marketplace_messages';
-
-// Initialize data in localStorage if it doesn't exist
-const initializeData = () => {
-  if (!localStorage.getItem(LISTINGS_KEY)) {
-    localStorage.setItem(LISTINGS_KEY, JSON.stringify(sampleListings));
-  }
-  if (!localStorage.getItem(BIDS_KEY)) {
-    localStorage.setItem(BIDS_KEY, JSON.stringify(sampleBids));
-  }
-  if (!localStorage.getItem(CONVERSATIONS_KEY)) {
-    localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(sampleConversations));
-  }
-  if (!localStorage.getItem(MESSAGES_KEY)) {
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(sampleMessages));
-  }
+type BidRow = {
+  id: string;
+  product_id: string;
+  bidder_id: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
 };
 
-// Helper to simulate API delay
-const simulateDelay = async () => {
-  return new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 300));
+type MessageRow = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  product_id: string | null;
+  content: string;
+  read: boolean;
+  created_at: string;
 };
 
-// Initialize when the service is imported
-initializeData();
+type ProfileLite = { id: string; username: string | null; avatar_url: string | null };
 
-// Listing services
+const profileName = (p?: ProfileLite | null, fallbackId?: string) =>
+  p?.username || (fallbackId ? `User ${fallbackId.slice(0, 6)}` : 'Unknown');
+
+const productToListing = (
+  p: ProductRow,
+  seller?: ProfileLite | null
+): Listing => ({
+  id: p.id,
+  title: p.title,
+  description: p.description ?? '',
+  price: Number(p.price),
+  category: p.category as Category,
+  condition: fromDbCondition(p.condition),
+  imageUrl: p.image_url || (p.image_urls && p.image_urls[0]) || '',
+  sellerId: p.seller_id,
+  sellerName: profileName(seller, p.seller_id),
+  sellerAvatar: seller?.avatar_url || undefined,
+  createdAt: p.created_at,
+  updatedAt: p.updated_at,
+});
+
+const bidRowToBid = (b: BidRow, bidder?: ProfileLite | null): Bid => ({
+  id: b.id,
+  listingId: b.product_id,
+  buyerId: b.bidder_id,
+  buyerName: profileName(bidder, b.bidder_id),
+  buyerAvatar: bidder?.avatar_url || undefined,
+  amount: Number(b.amount),
+  status: (b.status as Bid['status']) || 'pending',
+  createdAt: b.created_at,
+});
+
+const msgRowToMessage = (m: MessageRow): Message => ({
+  id: m.id,
+  senderId: m.sender_id,
+  receiverId: m.receiver_id,
+  content: m.content,
+  createdAt: m.created_at,
+  read: m.read,
+});
+
+// ---------- Profile batch fetch ----------
+const fetchProfilesMap = async (ids: string[]): Promise<Map<string, ProfileLite>> => {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  if (unique.length === 0) return new Map();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url')
+    .in('id', unique);
+  if (error) {
+    console.error('fetchProfilesMap error', error);
+    return new Map();
+  }
+  return new Map((data || []).map((p) => [p.id, p as ProfileLite]));
+};
+
+// ---------- Conversation id (deterministic, derived from participant pair) ----------
+const conversationIdFor = (a: string, b: string) => [a, b].sort().join('__');
+const parseConversationId = (id: string): [string, string] => {
+  const parts = id.split('__');
+  return [parts[0], parts[1]];
+};
+
+// ============================================================================
+// Listing service
+// ============================================================================
 export const listingService = {
   async getAll(): Promise<Listing[]> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    return listings;
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = (data || []) as ProductRow[];
+    const profiles = await fetchProfilesMap(rows.map((r) => r.seller_id));
+    return rows.map((r) => productToListing(r, profiles.get(r.seller_id)));
   },
 
   async getById(id: string): Promise<Listing | undefined> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    return listings.find((listing: Listing) => listing.id === id);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return undefined;
+    const row = data as ProductRow;
+    const profiles = await fetchProfilesMap([row.seller_id]);
+    return productToListing(row, profiles.get(row.seller_id));
   },
 
   async getBySellerId(sellerId: string): Promise<Listing[]> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    return listings.filter((listing: Listing) => listing.sellerId === sellerId);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('seller_id', sellerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = (data || []) as ProductRow[];
+    const profiles = await fetchProfilesMap([sellerId]);
+    return rows.map((r) => productToListing(r, profiles.get(r.seller_id)));
   },
-  
-  async create(listing: Omit<Listing, 'id' | 'createdAt' | 'updatedAt'>): Promise<Listing> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    const newListing: Listing = {
-      ...listing,
-      id: `listing-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+
+  async create(
+    listing: Omit<Listing, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<Listing> {
+    const insert = {
+      title: listing.title,
+      description: listing.description,
+      price: listing.price,
+      category: listing.category,
+      condition: toDbCondition(listing.condition) as
+        | 'new'
+        | 'like-new'
+        | 'good'
+        | 'fair'
+        | 'poor',
+      image_url: listing.imageUrl || null,
+      seller_id: listing.sellerId,
+      status: 'active',
     };
-    listings.push(newListing);
-    localStorage.setItem(LISTINGS_KEY, JSON.stringify(listings));
-    return newListing;
+    const { data, error } = await supabase
+      .from('products')
+      .insert(insert)
+      .select('*')
+      .single();
+    if (error) throw error;
+    const row = data as ProductRow;
+    const profiles = await fetchProfilesMap([row.seller_id]);
+    return productToListing(row, profiles.get(row.seller_id));
   },
 
   async update(id: string, updates: Partial<Listing>): Promise<Listing | undefined> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    const index = listings.findIndex((listing: Listing) => listing.id === id);
-    if (index !== -1) {
-      listings[index] = {
-        ...listings[index],
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      localStorage.setItem(LISTINGS_KEY, JSON.stringify(listings));
-      return listings[index];
-    }
-    return undefined;
+    const patch: {
+      title?: string;
+      description?: string;
+      price?: number;
+      category?: string;
+      condition?: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
+      image_url?: string;
+    } = {};
+    if (updates.title !== undefined) patch.title = updates.title;
+    if (updates.description !== undefined) patch.description = updates.description;
+    if (updates.price !== undefined) patch.price = updates.price;
+    if (updates.category !== undefined) patch.category = updates.category;
+    if (updates.condition !== undefined)
+      patch.condition = toDbCondition(updates.condition) as
+        | 'new'
+        | 'like-new'
+        | 'good'
+        | 'fair'
+        | 'poor';
+    if (updates.imageUrl !== undefined) patch.image_url = updates.imageUrl;
+
+    const { data, error } = await supabase
+      .from('products')
+      .update(patch)
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return undefined;
+    const row = data as ProductRow;
+    const profiles = await fetchProfilesMap([row.seller_id]);
+    return productToListing(row, profiles.get(row.seller_id));
   },
 
   async delete(id: string): Promise<boolean> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    const filteredListings = listings.filter((listing: Listing) => listing.id !== id);
-    localStorage.setItem(LISTINGS_KEY, JSON.stringify(filteredListings));
-    
-    // Also delete associated bids
-    const bids = JSON.parse(localStorage.getItem(BIDS_KEY) || '[]');
-    const filteredBids = bids.filter((bid: Bid) => bid.listingId !== id);
-    localStorage.setItem(BIDS_KEY, JSON.stringify(filteredBids));
-    
+    // Remove associated bids and messages first (no DB-level cascade configured)
+    await supabase.from('bids').delete().eq('product_id', id);
+    await supabase.from('messages').delete().eq('product_id', id);
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) throw error;
     return true;
   },
 
-  async search(query: string, category?: Category, minPrice?: number, maxPrice?: number): Promise<Listing[]> {
-    await simulateDelay();
-    const listings = JSON.parse(localStorage.getItem(LISTINGS_KEY) || '[]');
-    
-    return listings.filter((listing: Listing) => {
-      const matchesQuery = query ? 
-        listing.title.toLowerCase().includes(query.toLowerCase()) || 
-        listing.description.toLowerCase().includes(query.toLowerCase()) : 
-        true;
-      
-      const matchesCategory = category ? listing.category === category : true;
-      
-      const matchesMinPrice = minPrice !== undefined ? listing.price >= minPrice : true;
-      const matchesMaxPrice = maxPrice !== undefined ? listing.price <= maxPrice : true;
-      
-      return matchesQuery && matchesCategory && matchesMinPrice && matchesMaxPrice;
-    });
-  }
+  async search(
+    query: string,
+    category?: Category,
+    minPrice?: number,
+    maxPrice?: number
+  ): Promise<Listing[]> {
+    let q = supabase.from('products').select('*').order('created_at', { ascending: false });
+    if (category) q = q.eq('category', category);
+    if (minPrice !== undefined) q = q.gte('price', minPrice);
+    if (maxPrice !== undefined) q = q.lte('price', maxPrice);
+    if (query && query.trim()) {
+      const safe = query.replace(/[%,]/g, ' ').trim();
+      q = q.or(`title.ilike.%${safe}%,description.ilike.%${safe}%`);
+    }
+    const { data, error } = await q;
+    if (error) throw error;
+    const rows = (data || []) as ProductRow[];
+    const profiles = await fetchProfilesMap(rows.map((r) => r.seller_id));
+    return rows.map((r) => productToListing(r, profiles.get(r.seller_id)));
+  },
 };
 
-// Bid services
+// ============================================================================
+// Bid service
+// ============================================================================
 export const bidService = {
   async getByListingId(listingId: string): Promise<Bid[]> {
-    await simulateDelay();
-    const bids = JSON.parse(localStorage.getItem(BIDS_KEY) || '[]');
-    return bids.filter((bid: Bid) => bid.listingId === listingId);
+    const { data, error } = await supabase
+      .from('bids')
+      .select('*')
+      .eq('product_id', listingId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = (data || []) as BidRow[];
+    const profiles = await fetchProfilesMap(rows.map((r) => r.bidder_id));
+    return rows.map((r) => bidRowToBid(r, profiles.get(r.bidder_id)));
   },
 
   async getByBuyerId(buyerId: string): Promise<Bid[]> {
-    await simulateDelay();
-    const bids = JSON.parse(localStorage.getItem(BIDS_KEY) || '[]');
-    return bids.filter((bid: Bid) => bid.buyerId === buyerId);
+    const { data, error } = await supabase
+      .from('bids')
+      .select('*')
+      .eq('bidder_id', buyerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const rows = (data || []) as BidRow[];
+    const profiles = await fetchProfilesMap([buyerId]);
+    return rows.map((r) => bidRowToBid(r, profiles.get(r.bidder_id)));
   },
 
   async create(bid: Omit<Bid, 'id' | 'createdAt' | 'status'>): Promise<Bid> {
-    await simulateDelay();
-    const bids = JSON.parse(localStorage.getItem(BIDS_KEY) || '[]');
-    const newBid: Bid = {
-      ...bid,
-      id: `bid-${Math.random().toString(36).substr(2, 9)}`,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-    bids.push(newBid);
-    localStorage.setItem(BIDS_KEY, JSON.stringify(bids));
-    return newBid;
+    const { data, error } = await supabase
+      .from('bids')
+      .insert({
+        product_id: bid.listingId,
+        bidder_id: bid.buyerId,
+        amount: bid.amount,
+        status: 'pending',
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    const row = data as BidRow;
+    const profiles = await fetchProfilesMap([row.bidder_id]);
+    return bidRowToBid(row, profiles.get(row.bidder_id));
   },
 
-  async updateStatus(id: string, status: 'accepted' | 'rejected'): Promise<Bid | undefined> {
-    await simulateDelay();
-    const bids = JSON.parse(localStorage.getItem(BIDS_KEY) || '[]');
-    const index = bids.findIndex((bid: Bid) => bid.id === id);
-    if (index !== -1) {
-      bids[index] = {
-        ...bids[index],
-        status
-      };
-      localStorage.setItem(BIDS_KEY, JSON.stringify(bids));
-      return bids[index];
-    }
-    return undefined;
+  async updateStatus(
+    id: string,
+    status: 'accepted' | 'rejected'
+  ): Promise<Bid | undefined> {
+    const { data, error } = await supabase
+      .from('bids')
+      .update({ status })
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return undefined;
+    const row = data as BidRow;
+    const profiles = await fetchProfilesMap([row.bidder_id]);
+    return bidRowToBid(row, profiles.get(row.bidder_id));
   },
 
   async delete(id: string): Promise<boolean> {
-    await simulateDelay();
-    const bids = JSON.parse(localStorage.getItem(BIDS_KEY) || '[]');
-    const filteredBids = bids.filter((bid: Bid) => bid.id !== id);
-    localStorage.setItem(BIDS_KEY, JSON.stringify(filteredBids));
+    const { error } = await supabase.from('bids').delete().eq('id', id);
+    if (error) throw error;
     return true;
-  }
+  },
 };
 
-// Conversation services
+// ============================================================================
+// Conversation service (synthesized from messages — no conversations table)
+// ============================================================================
 export const conversationService = {
   async getByUserId(userId: string): Promise<Conversation[]> {
-    await simulateDelay();
-    const conversations = JSON.parse(localStorage.getItem(CONVERSATIONS_KEY) || '[]');
-    return conversations.filter((conv: Conversation) => conv.participantIds.includes(userId));
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    const rows = (data || []) as MessageRow[];
+
+    // Group by "other participant"
+    const groups = new Map<
+      string,
+      { other: string; messages: MessageRow[]; unread: number }
+    >();
+    for (const m of rows) {
+      const other = m.sender_id === userId ? m.receiver_id : m.sender_id;
+      const g = groups.get(other) || { other, messages: [], unread: 0 };
+      g.messages.push(m);
+      if (!m.read && m.receiver_id === userId) g.unread += 1;
+      groups.set(other, g);
+    }
+
+    const otherIds = Array.from(groups.keys());
+    const profiles = await fetchProfilesMap([userId, ...otherIds]);
+    const me = profiles.get(userId);
+
+    const conversations: Conversation[] = otherIds.map((otherId) => {
+      const g = groups.get(otherId)!;
+      const last = g.messages[g.messages.length - 1];
+      const otherProfile = profiles.get(otherId);
+      return {
+        id: conversationIdFor(userId, otherId),
+        participantIds: [userId, otherId],
+        participantNames: [profileName(me, userId), profileName(otherProfile, otherId)],
+        participantAvatars: [me?.avatar_url || undefined, otherProfile?.avatar_url || undefined],
+        lastMessage: last?.content,
+        lastMessageDate: last?.created_at,
+        unreadCount: g.unread,
+      };
+    });
+
+    conversations.sort((a, b) =>
+      (b.lastMessageDate || '').localeCompare(a.lastMessageDate || '')
+    );
+    return conversations;
   },
 
   async getById(id: string): Promise<Conversation | undefined> {
-    await simulateDelay();
-    const conversations = JSON.parse(localStorage.getItem(CONVERSATIONS_KEY) || '[]');
-    return conversations.find((conv: Conversation) => conv.id === id);
+    const [a, b] = parseConversationId(id);
+    if (!a || !b) return undefined;
+    const profiles = await fetchProfilesMap([a, b]);
+    return {
+      id,
+      participantIds: [a, b],
+      participantNames: [profileName(profiles.get(a), a), profileName(profiles.get(b), b)],
+      participantAvatars: [profiles.get(a)?.avatar_url || undefined, profiles.get(b)?.avatar_url || undefined],
+      unreadCount: 0,
+    };
   },
 
-  async findOrCreateConversation(user1Id: string, user2Id: string, user1Name: string, user2Name: string): Promise<Conversation> {
-    await simulateDelay();
-    const conversations = JSON.parse(localStorage.getItem(CONVERSATIONS_KEY) || '[]');
-    
-    // Find existing conversation
-    const existingConv = conversations.find(
-      (conv: Conversation) => 
-        conv.participantIds.includes(user1Id) && 
-        conv.participantIds.includes(user2Id)
-    );
-    
-    if (existingConv) return existingConv;
-    
-    // Create new conversation
-    const newConversation: Conversation = {
-      id: `conv-${Math.random().toString(36).substr(2, 9)}`,
+  async findOrCreateConversation(
+    user1Id: string,
+    user2Id: string,
+    _user1Name: string,
+    _user2Name: string
+  ): Promise<Conversation> {
+    const id = conversationIdFor(user1Id, user2Id);
+    const profiles = await fetchProfilesMap([user1Id, user2Id]);
+    return {
+      id,
       participantIds: [user1Id, user2Id],
-      participantNames: [user1Name, user2Name],
-      unreadCount: 0
+      participantNames: [
+        profileName(profiles.get(user1Id), user1Id),
+        profileName(profiles.get(user2Id), user2Id),
+      ],
+      participantAvatars: [
+        profiles.get(user1Id)?.avatar_url || undefined,
+        profiles.get(user2Id)?.avatar_url || undefined,
+      ],
+      unreadCount: 0,
     };
-    
-    conversations.push(newConversation);
-    localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
-    
-    // Initialize messages array for this conversation
-    const allMessages = JSON.parse(localStorage.getItem(MESSAGES_KEY) || '{}');
-    allMessages[newConversation.id] = [];
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages));
-    
-    return newConversation;
   },
-  
+
   async updateUnreadCount(id: string, userId: string): Promise<void> {
-    const conversations = JSON.parse(localStorage.getItem(CONVERSATIONS_KEY) || '[]');
-    const index = conversations.findIndex((conv: Conversation) => conv.id === id);
-    if (index !== -1) {
-      conversations[index].unreadCount = 0;
-      localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
-    }
-  }
+    const [a, b] = parseConversationId(id);
+    const other = a === userId ? b : a;
+    if (!other) return;
+    await supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('sender_id', other)
+      .eq('receiver_id', userId)
+      .eq('read', false);
+  },
 };
 
-// Message services
+// ============================================================================
+// Message service
+// ============================================================================
 export const messageService = {
   async getByConversationId(conversationId: string): Promise<Message[]> {
-    await simulateDelay();
-    const allMessages = JSON.parse(localStorage.getItem(MESSAGES_KEY) || '{}');
-    return allMessages[conversationId] || [];
+    const [a, b] = parseConversationId(conversationId);
+    if (!a || !b) return [];
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(
+        `and(sender_id.eq.${a},receiver_id.eq.${b}),and(sender_id.eq.${b},receiver_id.eq.${a})`
+      )
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data || []).map((m) => msgRowToMessage(m as MessageRow));
   },
 
-  async sendMessage(conversationId: string, message: Omit<Message, 'id' | 'createdAt' | 'read'>): Promise<Message> {
-    await simulateDelay();
-    const allMessages = JSON.parse(localStorage.getItem(MESSAGES_KEY) || '{}');
-    const conversations = JSON.parse(localStorage.getItem(CONVERSATIONS_KEY) || '[]');
-    
-    // Create the new message
-    const newMessage: Message = {
-      ...message,
-      id: `msg-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date().toISOString(),
-      read: false
-    };
-    
-    // Add to messages
-    if (!allMessages[conversationId]) {
-      allMessages[conversationId] = [];
-    }
-    allMessages[conversationId].push(newMessage);
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages));
-    
-    // Update conversation with last message
-    const convIndex = conversations.findIndex((conv: Conversation) => conv.id === conversationId);
-    if (convIndex !== -1) {
-      // Increment unread count if receiver has unread messages
-      const receiverIndex = conversations[convIndex].participantIds.findIndex(id => id === message.receiverId);
-      if (receiverIndex !== -1) {
-        conversations[convIndex].unreadCount = (conversations[convIndex].unreadCount || 0) + 1;
-      }
-      
-      conversations[convIndex].lastMessage = message.content;
-      conversations[convIndex].lastMessageDate = newMessage.createdAt;
-      localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
-    }
-    
-    return newMessage;
+  async sendMessage(
+    conversationId: string,
+    message: Omit<Message, 'id' | 'createdAt' | 'read'>
+  ): Promise<Message> {
+    // conversationId is informational; sender/receiver carry the truth
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        sender_id: message.senderId,
+        receiver_id: message.receiverId,
+        content: message.content,
+        read: false,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return msgRowToMessage(data as MessageRow);
   },
 
   async markAsRead(conversationId: string, userId: string): Promise<void> {
-    await simulateDelay();
-    const allMessages = JSON.parse(localStorage.getItem(MESSAGES_KEY) || '{}');
-    const messages = allMessages[conversationId] || [];
-    
-    messages.forEach((msg: Message) => {
-      if (msg.receiverId === userId && !msg.read) {
-        msg.read = true;
-      }
-    });
-    
-    allMessages[conversationId] = messages;
-    localStorage.setItem(MESSAGES_KEY, JSON.stringify(allMessages));
-    
-    // Update unread count in conversation
-    const conversations = JSON.parse(localStorage.getItem(CONVERSATIONS_KEY) || '[]');
-    const convIndex = conversations.findIndex((conv: Conversation) => conv.id === conversationId);
-    if (convIndex !== -1) {
-      conversations[convIndex].unreadCount = 0;
-      localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
-    }
-  }
+    const [a, b] = parseConversationId(conversationId);
+    const other = a === userId ? b : a;
+    if (!other) return;
+    await supabase
+      .from('messages')
+      .update({ read: true })
+      .eq('sender_id', other)
+      .eq('receiver_id', userId)
+      .eq('read', false);
+  },
 };
 
-// Updated categories to match the Category type in types/index.ts
+// ============================================================================
+// Static lookups & formatters
+// ============================================================================
 export const categories = [
-  { value: "textbooks", label: "Textbooks" },
-  { value: "electronics", label: "Electronics" },
-  { value: "furniture", label: "Furniture" },
-  { value: "clothing", label: "Clothing" },
-  { value: "kitchen", label: "Kitchen" },
-  { value: "school_supplies", label: "School Supplies" },
-  { value: "engineering_tools", label: "Engineering Tools" },
-  { value: "lab_equipment", label: "Lab Equipment" },
-  { value: "dorm_essentials", label: "Dorm Essentials" },
-  { value: "other", label: "Other" }
+  { value: 'textbooks', label: 'Textbooks' },
+  { value: 'electronics', label: 'Electronics' },
+  { value: 'furniture', label: 'Furniture' },
+  { value: 'clothing', label: 'Clothing' },
+  { value: 'kitchen', label: 'Kitchen' },
+  { value: 'school_supplies', label: 'School Supplies' },
+  { value: 'engineering_tools', label: 'Engineering Tools' },
+  { value: 'lab_equipment', label: 'Lab Equipment' },
+  { value: 'dorm_essentials', label: 'Dorm Essentials' },
+  { value: 'other', label: 'Other' },
 ];
 
-// Conditions
-export const conditions: { value: Condition, label: string }[] = [
-  { value: "new", label: "New" },
-  { value: "like_new", label: "Like New" },
-  { value: "good", label: "Good" },
-  { value: "fair", label: "Fair" },
-  { value: "poor", label: "Poor" }
+export const conditions: { value: Condition; label: string }[] = [
+  { value: 'new', label: 'New' },
+  { value: 'like_new', label: 'Like New' },
+  { value: 'good', label: 'Good' },
+  { value: 'fair', label: 'Fair' },
+  { value: 'poor', label: 'Poor' },
 ];
 
-export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-  }).format(price);
-};
+export const formatPrice = (price: number): string =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(price);
 
-export const formatDate = (dateStr: string): string => {
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(date);
-};
+export const formatDate = (dateStr: string): string =>
+  new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(
+    new Date(dateStr)
+  );
