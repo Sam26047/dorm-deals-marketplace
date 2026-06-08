@@ -93,7 +93,7 @@ const FilterSidebar = ({
               type="number"
               id="min-price"
               min="0"
-              placeholder="Min $"
+              placeholder="Min ₹"
               className="input-field"
               value={minPrice === '' ? '' : minPrice}
               onChange={handleMinPriceChange}
@@ -107,7 +107,7 @@ const FilterSidebar = ({
               type="number"
               id="max-price"
               min="0"
-              placeholder="Max $"
+              placeholder="Max ₹"
               className="input-field"
               value={maxPrice === '' ? '' : maxPrice}
               onChange={handleMaxPriceChange}
